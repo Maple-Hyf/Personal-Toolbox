@@ -1,45 +1,52 @@
-# Personal Toolbox 1.0
+# Personal Toolbox 1.1
 
 Small everyday tools for personal use.
 
-## Included
+## Tools
 
-- `index.html` — Toolbox dashboard
-- `price-compare.html` — multi-product unit-price comparison
-- `manifest.webmanifest` — installable web app metadata
-- `service-worker.js` — offline app-shell cache
-- `apple-touch-icon.png` — iPhone/iPad Home Screen icon
-- `icon-192.png`, `icon-512.png` — PWA icons
-- `favicon-32.png` — browser favicon
+### Price Compare
+Compare unit prices across products and supported currencies.
 
-## Price Compare
+### Random Picker
+A lightweight decision helper for choice paralysis.
 
-- Add/remove any number of products
-- Automatic labels: A, B, C … Z, AA …
-- Per-product currency: EUR, CNY, USD, TRY, INR, JPY
-- Optional note for each product
-- Output currency independently selectable from the same six currencies
-- Live ranking by normalized price per 100 quantity units
-- Shows how much more expensive each option is than the cheapest
-- Daily FX data from Frankfurter
-- Last successful FX rates cached for offline use
-- Current comparison automatically saved in localStorage
-- `Clear` resets the current comparison
-- Decimal comma and decimal point are both accepted
+- Starts with A / B and supports custom add/remove
+- Optional title
+- Multi-line paste
+- Enter adds the next option
+- Draw countdown rhythm: 3 → 2 → 1 → 1…
+- Pick again
+- Remove & pick again
+- Clearly distinguishes a random pick from the only remaining option
+- Done / Again / Start over
+- Reload last Pick-one input set
+- Current state is saved locally
 
-### Quantity rule
+## Navigation
 
-All products must use the same quantity unit. The UI deliberately does not ask for a unit.
+Every tool page uses:
+
+`← Back to Dashboard`
+
+The link points to the Toolbox's own `index.html`.
+
+## Files
+
+- `index.html`
+- `price-compare.html`
+- `random-picker.html`
+- `manifest.webmanifest`
+- `service-worker.js`
+- `apple-touch-icon.png`
+- `icon-192.png`
+- `icon-512.png`
+- `favicon-32.png`
 
 ## GitHub Pages
 
-Upload all files to the root of the repository and enable GitHub Pages for that branch/folder.
+Upload all files to the repository root and enable GitHub Pages.
 
-## iPhone / Safari
-
-1. Open the GitHub Pages URL in Safari.
+On iPhone Safari:
+1. Open the Toolbox GitHub Pages URL.
 2. Tap Share.
 3. Choose **Add to Home Screen**.
-4. Launch **Toolbox** from the Home Screen.
-
-The app uses the supplied `apple-touch-icon.png`, runs in standalone mode, respects iPhone safe areas, and caches its local app shell for offline launches.

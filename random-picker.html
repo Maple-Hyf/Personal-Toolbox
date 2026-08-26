@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#f4f4f1" />
+<meta name="format-detection" content="telephone=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Toolbox" />
+<link rel="manifest" href="./manifest.webmanifest" />
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
+<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png" />
+<title>Random Picker · Toolbox</title>
+<style>
+:root{
+  --bg:#f4f4f1;
+  --card:#ffffff;
+  --text:#181818;
+  --muted:#6d6d68;
+  --border:#deded8;
+  --border-strong:#b9b9b2;
+  --soft:#fafaf8;
+  --accent:#181818;
+  --result-bg:#181818;
+  --result-text:#ffffff;
+  --success:#39724d;
+  --success-bg:#edf6ef;
+  --warn:#8b6748;
+  --warn-bg:#f7f0e8;
+  --warn-border:#dcc7b2;
+  --shadow:0 10px 34px rgba(0,0,0,.06);
+}
+*{box-sizing:border-box}
+html{
+  background:var(--bg);
+  -webkit-text-size-adjust:100%;
+}
+body{
+  margin:0;
+  min-height:100vh;
+  min-height:100dvh;
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,"Noto Sans",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+button,input{font:inherit}
+button,a{
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+.wrap{
+  width:min(720px,calc(100% - 28px));
+  margin:0 auto;
+  padding:
+    calc(24px + env(safe-area-inset-top))
+    0
+    calc(46px + env(safe-area-inset-bottom));
+}
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  margin-bottom:14px;
+  min-height:36px;
+}
+.topbar-actions{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.back-dashboard{
+  display:inline-flex;
+  align-items:center;
+  min-height:36px;
+  color:var(--muted);
+  text-decoration:none;
+  font-size:13px;
+  white-space:nowrap;
+}
+.back-dashboard:active{color:var(--text)}
+.top-action{
+  min-height:36px;
+  border:0;
+  padding:0 4px;
+  background:transparent;
+  color:var(--muted);
+  cursor:pointer;
+  font-size:13px;
+}
+.top-action:active{color:var(--text)}
+.top-action:disabled{
+  opacity:.3;
+  cursor:default;
+}
+.eyebrow{
+  text-transform:uppercase;
+  letter-spacing:.18em;
+  font-size:11px;
+  color:var(--muted);
+  margin-bottom:6px;
+}
+h1{
+  margin:0;
+  font-size:29px;
+  line-height:1.08;
+  letter-spacing:-.55px;
+}
+.sub{
+  margin-top:8px;
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.5;
+}
+.title-field{margin-top:22px}
+label{
+  display:block;
+  margin-bottom:6px;
+  color:var(--muted);
+  font-size:11px;
+  font-weight:650;
+}
+input{
+  width:100%;
+  height:46px;
+  border:1px solid var(--border);
+  background:#fff;
+  color:var(--text);
+  outline:none;
+  border-radius:11px;
+  padding:0 12px;
+  font-size:16px;
+  appearance:none;
+  -webkit-appearance:none;
+}
+input:focus{border-color:var(--border-strong)}
+.options{
+  display:grid;
+  gap:10px;
+  margin-top:16px;
+}
+.option-row{
+  display:grid;
+  grid-template-columns:42px minmax(0,1fr) 40px;
+  gap:9px;
+  align-items:center;
+}
+.option-label{
+  height:46px;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--border);
+  background:var(--card);
+  border-radius:11px;
+  font-weight:780;
+  font-size:16px;
+}
+.remove{
+  width:40px;
+  height:40px;
+  border:0;
+  border-radius:10px;
+  background:transparent;
+  color:#8b8b85;
+  font-size:23px;
+  cursor:pointer;
+}
+.remove:active{
+  background:#ecece8;
+  color:var(--text);
+}
+.remove:disabled{
+  opacity:.22;
+  cursor:default;
+  background:transparent;
+}
+.add{
+  width:100%;
+  min-height:48px;
+  margin-top:11px;
+  border:1px dashed var(--border-strong);
+  border-radius:14px;
+  background:transparent;
+  color:var(--text);
+  padding:12px 16px;
+  cursor:pointer;
+  font-size:14px;
+}
+.add:active{background:rgba(255,255,255,.55)}
+.hint{
+  margin-top:9px;
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.45;
+}
+.primary{
+  width:100%;
+  min-height:52px;
+  margin-top:20px;
+  border:0;
+  border-radius:14px;
+  background:var(--accent);
+  color:#fff;
+  font-weight:720;
+  cursor:pointer;
+  font-size:15px;
+}
+.primary:disabled{
+  opacity:.28;
+  cursor:default;
+}
+.primary:not(:disabled):active{transform:scale(.995)}
+.stage{margin-top:23px}
+.hidden{display:none !important}
+.countdown-card{
+  min-height:260px;
+  display:grid;
+  place-items:center;
+  background:var(--result-bg);
+  color:var(--result-text);
+  border-radius:22px;
+  box-shadow:var(--shadow);
+  text-align:center;
+  padding:28px;
+}
+.countdown-label{
+  text-transform:uppercase;
+  letter-spacing:.18em;
+  font-size:11px;
+  opacity:.62;
+}
+.countdown-number{
+  margin-top:10px;
+  font-size:92px;
+  line-height:1;
+  font-weight:820;
+  letter-spacing:-4px;
+}
+.result-card{
+  background:var(--result-bg);
+  color:var(--result-text);
+  border-radius:22px;
+  box-shadow:var(--shadow);
+  padding:30px 24px;
+  text-align:center;
+}
+.result-title,
+.only-title,
+.done-title{
+  font-size:14px;
+  line-height:1.45;
+}
+.result-title{color:rgba(255,255,255,.62)}
+.only-title,.done-title{color:var(--muted)}
+.result-title:empty,
+.only-title:empty,
+.done-title:empty{display:none}
+.result-kicker,
+.only-kicker,
+.done-kicker{
+  margin-top:10px;
+  text-transform:uppercase;
+  letter-spacing:.18em;
+  font-size:10px;
+  font-weight:760;
+}
+.result-kicker{color:rgba(255,255,255,.58)}
+.only-kicker{color:var(--warn)}
+.done-kicker{color:var(--success)}
+.result-badge,
+.only-badge,
+.done-badge{
+  width:74px;
+  height:74px;
+  margin:20px auto 14px;
+  display:grid;
+  place-items:center;
+  border-radius:20px;
+  font-size:34px;
+  font-weight:830;
+  letter-spacing:-1px;
+}
+.result-badge{
+  background:#fff;
+  color:#181818;
+}
+.only-badge{
+  background:var(--warn-bg);
+  color:var(--warn);
+}
+.done-badge{
+  background:#fff;
+  border:1px solid #c8dfcf;
+  color:var(--success);
+}
+.result-option,
+.only-option,
+.done-option{
+  font-size:clamp(28px,7vw,44px);
+  line-height:1.1;
+  font-weight:800;
+  letter-spacing:-.8px;
+  overflow-wrap:anywhere;
+}
+.result-meta{
+  margin-top:12px;
+  color:rgba(255,255,255,.58);
+  font-size:11px;
+}
+.actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:12px;
+}
+.action{
+  min-height:48px;
+  border-radius:13px;
+  border:1px solid var(--border);
+  background:var(--card);
+  color:var(--text);
+  cursor:pointer;
+  font-size:13px;
+  font-weight:650;
+  padding:10px 12px;
+}
+.action:active{background:#f0f0ec}
+.action.full{grid-column:1 / -1}
+.action.dark{
+  background:var(--text);
+  color:#fff;
+  border-color:var(--text);
+}
+.only-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:22px;
+  padding:28px 22px;
+  box-shadow:var(--shadow);
+  text-align:center;
+}
+.only-alert{
+  margin:22px auto 0;
+  max-width:460px;
+  border:1px solid var(--warn-border);
+  background:var(--warn-bg);
+  border-radius:14px;
+  padding:14px 16px;
+  text-align:left;
+}
+.only-alert strong{
+  display:block;
+  color:var(--warn);
+  font-size:12px;
+  margin-bottom:4px;
+}
+.only-alert span{
+  color:#5f5145;
+  font-size:13px;
+  line-height:1.5;
+}
+.insight{
+  margin:16px auto 0;
+  max-width:440px;
+  padding-top:16px;
+  border-top:1px solid var(--border);
+  color:var(--text);
+  font-size:13px;
+  line-height:1.5;
+}
+.done-card{
+  background:var(--success-bg);
+  border:1px solid #c8dfcf;
+  border-radius:22px;
+  padding:30px 22px;
+  text-align:center;
+}
+.footer{
+  margin-top:20px;
+  text-align:center;
+  color:#8b8b85;
+  font-size:11px;
+}
+@media(max-width:420px){
+  .wrap{
+    width:calc(100% - 22px);
+    padding-top:calc(17px + env(safe-area-inset-top));
+  }
+  .topbar{gap:8px}
+  .topbar-actions{gap:8px}
+  .back-dashboard{font-size:12.5px}
+  .option-row{
+    grid-template-columns:39px minmax(0,1fr) 38px;
+    gap:7px;
+  }
+  .option-label{height:46px}
+  .result-card,.only-card,.done-card{
+    padding-left:18px;
+    padding-right:18px;
+  }
+  .actions{grid-template-columns:1fr}
+  .action.full{grid-column:auto}
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+
+  <div class="topbar">
+    <a class="back-dashboard" href="./index.html">← Back to Dashboard</a>
+    <div class="topbar-actions" id="editorTopActions">
+      <button class="top-action" id="reloadLast" type="button">Reload last</button>
+      <button class="top-action" id="resetCurrent" type="button">Reset</button>
+    </div>
+  </div>
+
+  <section id="editor">
+    <div class="eyebrow">Everyday</div>
+    <h1>Random Picker</h1>
+    <div class="sub">Add your options and let chance make the call.</div>
+
+    <div class="title-field">
+      <label for="pickerTitle">Title <span style="font-weight:400">(optional)</span></label>
+      <input id="pickerTitle" type="text" maxlength="100" autocomplete="off" placeholder="e.g. Dinner tonight, Go or not?" />
+    </div>
+
+    <div class="options" id="options"></div>
+    <button class="add" id="addOption" type="button">+ Add option</button>
+    <div class="hint">Paste multiple lines to add several options at once. Press Enter to add the next option.</div>
+
+    <button class="primary" id="pickButton" type="button" disabled>Pick one</button>
+  </section>
+
+  <section class="stage hidden" id="countdownStage">
+    <div class="countdown-card">
+      <div>
+        <div class="countdown-label">Picking</div>
+        <div class="countdown-number" id="countdownNumber">3</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="stage hidden" id="resultStage">
+    <div class="result-card">
+      <div class="result-title" id="resultTitle"></div>
+      <div class="result-kicker">Picked</div>
+      <div class="result-badge" id="resultLabel">A</div>
+      <div class="result-option" id="resultOption">Option</div>
+      <div class="result-meta" id="resultMeta"></div>
+    </div>
+
+    <div class="actions">
+      <button class="action" id="pickAgain" type="button">Pick again</button>
+      <button class="action" id="removeAndPick" type="button">Remove &amp; pick again</button>
+      <button class="action dark full" id="doneButton" type="button">Done</button>
+    </div>
+  </section>
+
+  <section class="stage hidden" id="onlyStage">
+    <div class="only-card">
+      <div class="only-title" id="onlyTitle"></div>
+      <div class="only-kicker">Only option left</div>
+      <div class="only-badge" id="onlyLabel">A</div>
+      <div class="only-option" id="onlyOption">Option</div>
+
+      <div class="only-alert">
+        <strong>Not randomly picked</strong>
+        <span>This is the only option left after the others were removed.</span>
+      </div>
+
+      <div class="insight">Don’t like the result? You may already know what you want.</div>
+    </div>
+
+    <div class="actions">
+      <button class="action dark full" id="onlyDoneButton" type="button">Done</button>
+    </div>
+  </section>
+
+  <section class="stage hidden" id="doneStage">
+    <div class="done-card">
+      <div class="done-kicker">✓ Decided</div>
+      <div class="done-title" id="doneTitle"></div>
+      <div class="done-badge" id="doneLabel">A</div>
+      <div class="done-option" id="doneOption">Option</div>
+    </div>
+
+    <div class="actions">
+      <button class="action" id="againButton" type="button">Again</button>
+      <button class="action dark" id="startOver" type="button">Start over</button>
+    </div>
+  </section>
+
+  <div class="footer">Toolbox · Random Picker 1.0</div>
+</main>
+
+<script>
+const CURRENT_STATE_KEY = "toolbox-random-picker-current-v2";
+const LAST_PICK_KEY = "toolbox-random-picker-last-pick-v1";
+
+const blankOptions = () => [{ text: "" }, { text: "" }];
+
+let options = blankOptions();
+let title = "";
+let phase = "editing"; // editing | result | only | done
+let currentIndex = null;
+let drawCount = 0; // number of random draws in the current round
+let lastPickSnapshot = null;
+
+const editor = document.getElementById("editor");
+const optionsEl = document.getElementById("options");
+const pickerTitle = document.getElementById("pickerTitle");
+const addOption = document.getElementById("addOption");
+const pickButton = document.getElementById("pickButton");
+const reloadLast = document.getElementById("reloadLast");
+const resetCurrent = document.getElementById("resetCurrent");
+const editorTopActions = document.getElementById("editorTopActions");
+
+const countdownStage = document.getElementById("countdownStage");
+const countdownNumber = document.getElementById("countdownNumber");
+
+const resultStage = document.getElementById("resultStage");
+const resultTitle = document.getElementById("resultTitle");
+const resultLabel = document.getElementById("resultLabel");
+const resultOption = document.getElementById("resultOption");
+const resultMeta = document.getElementById("resultMeta");
+const pickAgain = document.getElementById("pickAgain");
+const removeAndPick = document.getElementById("removeAndPick");
+const doneButton = document.getElementById("doneButton");
+
+const onlyStage = document.getElementById("onlyStage");
+const onlyTitle = document.getElementById("onlyTitle");
+const onlyLabel = document.getElementById("onlyLabel");
+const onlyOption = document.getElementById("onlyOption");
+const onlyDoneButton = document.getElementById("onlyDoneButton");
+
+const doneStage = document.getElementById("doneStage");
+const doneTitle = document.getElementById("doneTitle");
+const doneLabel = document.getElementById("doneLabel");
+const doneOption = document.getElementById("doneOption");
+const againButton = document.getElementById("againButton");
+const startOver = document.getElementById("startOver");
+
+function optionLabel(index) {
+  let n = index + 1;
+  let label = "";
+  while (n > 0) {
+    n--;
+    label = String.fromCharCode(65 + (n % 26)) + label;
+    n = Math.floor(n / 26);
+  }
+  return label;
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function validIndexes() {
+  return options
+    .map((option, index) => option.text.trim() ? index : null)
+    .filter(index => index !== null);
+}
+
+function cleanSnapshot(snapshot) {
+  if (!snapshot || !Array.isArray(snapshot.options)) return null;
+
+  const cleanedOptions = snapshot.options
+    .map(item => ({ text: String(item?.text ?? "").slice(0, 240) }));
+
+  if (cleanedOptions.filter(item => item.text.trim()).length < 2) return null;
+
+  return {
+    title: String(snapshot.title ?? "").slice(0, 100),
+    options: cleanedOptions
+  };
+}
+
+function saveCurrentState() {
+  try {
+    localStorage.setItem(CURRENT_STATE_KEY, JSON.stringify({
+      options,
+      title,
+      phase,
+      currentIndex,
+      drawCount
+    }));
+  } catch (error) {
+    console.warn("Could not save current picker state:", error);
+  }
+}
+
+function saveLastPickSnapshot() {
+  lastPickSnapshot = {
+    title,
+    options: options.map(item => ({ text: item.text }))
+  };
+
+  try {
+    localStorage.setItem(LAST_PICK_KEY, JSON.stringify(lastPickSnapshot));
+  } catch (error) {
+    console.warn("Could not save last pick snapshot:", error);
+  }
+
+  updateReloadButton();
+}
+
+function loadStoredState() {
+  try {
+    const savedCurrent = JSON.parse(localStorage.getItem(CURRENT_STATE_KEY) || "null");
+
+    if (savedCurrent) {
+      if (Array.isArray(savedCurrent.options) && savedCurrent.options.length >= 2) {
+        options = savedCurrent.options.map(item => ({
+          text: String(item?.text ?? "").slice(0, 240)
+        }));
+      }
+
+      title = String(savedCurrent.title ?? "").slice(0, 100);
+
+      if (["editing", "result", "only", "done"].includes(savedCurrent.phase)) {
+        phase = savedCurrent.phase;
+      }
+
+      if (Number.isInteger(savedCurrent.currentIndex) &&
+          savedCurrent.currentIndex >= 0 &&
+          savedCurrent.currentIndex < options.length) {
+        currentIndex = savedCurrent.currentIndex;
+      }
+
+      if (Number.isInteger(savedCurrent.drawCount) && savedCurrent.drawCount >= 0) {
+        drawCount = savedCurrent.drawCount;
+      }
+    }
+
+    lastPickSnapshot = cleanSnapshot(
+      JSON.parse(localStorage.getItem(LAST_PICK_KEY) || "null")
+    );
+
+    const valid = validIndexes();
+
+    if (phase !== "editing" && (currentIndex === null || !options[currentIndex]?.text.trim())) {
+      phase = "editing";
+      currentIndex = null;
+    } else if (phase === "only" && valid.length !== 1) {
+      phase = "editing";
+      currentIndex = null;
+    }
+  } catch (error) {
+    console.warn("Could not restore picker state:", error);
+  }
+}
+
+function renderOptions() {
+  optionsEl.innerHTML = options.map((option, index) => `
+    <div class="option-row" data-index="${index}">
+      <div class="option-label">${optionLabel(index)}</div>
+      <input
+        type="text"
+        maxlength="240"
+        autocomplete="off"
+        enterkeyhint="next"
+        data-field="option"
+        value="${escapeHtml(option.text)}"
+        placeholder="Option ${optionLabel(index)}"
+        aria-label="Option ${optionLabel(index)}"
+      />
+      <button
+        class="remove"
+        type="button"
+        data-action="remove"
+        aria-label="Remove option ${optionLabel(index)}"
+        ${options.length <= 2 ? "disabled" : ""}
+      >×</button>
+    </div>
+  `).join("");
+
+  updatePickButton();
+  updateReloadButton();
+}
+
+function updatePickButton() {
+  pickButton.disabled = validIndexes().length < 2;
+}
+
+function updateReloadButton() {
+  reloadLast.disabled = !lastPickSnapshot;
+}
+
+function showOnly(stage) {
+  editorTopActions.classList.add("hidden");
+  editor.classList.add("hidden");
+  countdownStage.classList.add("hidden");
+  resultStage.classList.add("hidden");
+  onlyStage.classList.add("hidden");
+  doneStage.classList.add("hidden");
+  stage.classList.remove("hidden");
+}
+
+function showEditor() {
+  phase = "editing";
+  currentIndex = null;
+  drawCount = 0;
+  saveCurrentState();
+
+  editorTopActions.classList.remove("hidden");
+  editor.classList.remove("hidden");
+  countdownStage.classList.add("hidden");
+  resultStage.classList.add("hidden");
+  onlyStage.classList.add("hidden");
+  doneStage.classList.add("hidden");
+
+  pickerTitle.value = title;
+  renderOptions();
+}
+
+function showResult() {
+  const item = options[currentIndex];
+  if (!item?.text.trim()) return showEditor();
+
+  phase = "result";
+  saveCurrentState();
+
+  resultTitle.textContent = title.trim();
+  resultLabel.textContent = optionLabel(currentIndex);
+  resultOption.textContent = item.text.trim();
+  resultMeta.textContent = `Picked from ${validIndexes().length} options`;
+
+  showOnly(resultStage);
+}
+
+function showOnlyOne() {
+  const valid = validIndexes();
+  if (valid.length !== 1) return showEditor();
+
+  currentIndex = valid[0];
+  phase = "only";
+  saveCurrentState();
+
+  onlyTitle.textContent = title.trim();
+  onlyLabel.textContent = optionLabel(currentIndex);
+  onlyOption.textContent = options[currentIndex].text.trim();
+
+  showOnly(onlyStage);
+}
+
+function showDone() {
+  const item = options[currentIndex];
+  if (!item?.text.trim()) return showEditor();
+
+  phase = "done";
+  saveCurrentState();
+
+  doneTitle.textContent = title.trim();
+  doneLabel.textContent = optionLabel(currentIndex);
+  doneOption.textContent = item.text.trim();
+
+  showOnly(doneStage);
+}
+
+function secureRandomIndex(length) {
+  if (length <= 0) return null;
+
+  const max = Math.floor(0x100000000 / length) * length;
+  const array = new Uint32Array(1);
+  let value;
+
+  do {
+    crypto.getRandomValues(array);
+    value = array[0];
+  } while (value >= max);
+
+  return value % length;
+}
+
+function chooseRandomCurrentIndex() {
+  const valid = validIndexes();
+  if (valid.length < 2) return null;
+  return valid[secureRandomIndex(valid.length)];
+}
+
+let countdownToken = 0;
+
+function countdownSecondsForNextDraw() {
+  if (drawCount === 0) return 3;
+  if (drawCount === 1) return 2;
+  return 1;
+}
+
+async function runCountdownAndPick() {
+  const valid = validIndexes();
+
+  if (valid.length === 1) {
+    showOnlyOne();
+    return;
+  }
+
+  if (valid.length < 2) {
+    showEditor();
+    return;
+  }
+
+  const token = ++countdownToken;
+  const seconds = countdownSecondsForNextDraw();
+  showOnly(countdownStage);
+
+  for (let number = seconds; number >= 1; number--) {
+    if (token !== countdownToken) return;
+    countdownNumber.textContent = number;
+    await new Promise(resolve => setTimeout(resolve, 800));
+  }
+
+  if (token !== countdownToken) return;
+
+  currentIndex = chooseRandomCurrentIndex();
+  drawCount++;
+  saveCurrentState();
+  showResult();
+}
+
+function resetCurrentToBlank() {
+  countdownToken++;
+
+  // Hard-reset the CURRENT workspace only.
+  // Keep LAST_PICK_KEY intact so "Reload last" still works.
+  try {
+    localStorage.removeItem(CURRENT_STATE_KEY);
+  } catch (error) {
+    console.warn("Could not clear current picker state:", error);
+  }
+
+  options = blankOptions();
+  title = "";
+  phase = "editing";
+  currentIndex = null;
+  drawCount = 0;
+
+  // Rebuild the editor from fresh in-memory state.
+  pickerTitle.value = "";
+  editorTopActions.classList.remove("hidden");
+  editor.classList.remove("hidden");
+  countdownStage.classList.add("hidden");
+  resultStage.classList.add("hidden");
+  onlyStage.classList.add("hidden");
+  doneStage.classList.add("hidden");
+  renderOptions();
+
+  // Persist the new blank current workspace.
+  saveCurrentState();
+
+  setTimeout(() => {
+    const firstInput = optionsEl.querySelector('input[data-field="option"]');
+    firstInput?.focus();
+  }, 50);
+}
+
+function restoreLastPick() {
+  if (!lastPickSnapshot) return;
+
+  countdownToken++;
+  title = lastPickSnapshot.title;
+  options = lastPickSnapshot.options.map(item => ({ text: item.text }));
+  phase = "editing";
+  currentIndex = null;
+  drawCount = 0;
+  saveCurrentState();
+  showEditor();
+}
+
+function insertOptionsAt(index, texts) {
+  const cleaned = texts
+    .map(text => String(text).trim())
+    .filter(Boolean)
+    .slice(0, 100);
+
+  if (!cleaned.length) return;
+
+  options[index].text = cleaned[0];
+
+  if (cleaned.length > 1) {
+    const extras = cleaned.slice(1).map(text => ({ text }));
+    options.splice(index + 1, 0, ...extras);
+  }
+
+  saveCurrentState();
+  renderOptions();
+}
+
+function addBlankAfter(index) {
+  const insertAt = index + 1;
+  options.splice(insertAt, 0, { text: "" });
+  saveCurrentState();
+  renderOptions();
+
+  requestAnimationFrame(() => {
+    const row = optionsEl.querySelector(`.option-row[data-index="${insertAt}"]`);
+    row?.querySelector("input")?.focus();
+  });
+}
+
+pickerTitle.addEventListener("input", () => {
+  title = pickerTitle.value;
+  saveCurrentState();
+});
+
+optionsEl.addEventListener("input", event => {
+  if (!event.target.matches('input[data-field="option"]')) return;
+
+  const row = event.target.closest(".option-row");
+  const index = Number(row.dataset.index);
+  options[index].text = event.target.value;
+  saveCurrentState();
+  updatePickButton();
+});
+
+optionsEl.addEventListener("keydown", event => {
+  if (!event.target.matches('input[data-field="option"]')) return;
+  if (event.key !== "Enter") return;
+
+  event.preventDefault();
+  const row = event.target.closest(".option-row");
+  const index = Number(row.dataset.index);
+  addBlankAfter(index);
+});
+
+optionsEl.addEventListener("paste", event => {
+  if (!event.target.matches('input[data-field="option"]')) return;
+
+  const text = event.clipboardData?.getData("text") ?? "";
+  const lines = text
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(Boolean);
+
+  if (lines.length <= 1) return;
+
+  event.preventDefault();
+  const row = event.target.closest(".option-row");
+  const index = Number(row.dataset.index);
+  insertOptionsAt(index, lines);
+});
+
+optionsEl.addEventListener("click", event => {
+  const button = event.target.closest('[data-action="remove"]');
+  if (!button || button.disabled) return;
+
+  const row = button.closest(".option-row");
+  const index = Number(row.dataset.index);
+
+  options.splice(index, 1);
+
+  if (currentIndex !== null) {
+    if (index < currentIndex) currentIndex--;
+    else if (index === currentIndex) currentIndex = null;
+  }
+
+  saveCurrentState();
+  renderOptions();
+});
+
+addOption.addEventListener("click", () => {
+  options.push({ text: "" });
+  saveCurrentState();
+  renderOptions();
+
+  requestAnimationFrame(() => {
+    const rows = optionsEl.querySelectorAll(".option-row");
+    rows[rows.length - 1]?.querySelector("input")?.focus();
+  });
+});
+
+pickButton.addEventListener("click", () => {
+  title = pickerTitle.value;
+  drawCount = 0;
+  saveLastPickSnapshot();
+  saveCurrentState();
+  runCountdownAndPick();
+});
+
+pickAgain.addEventListener("click", () => {
+  runCountdownAndPick();
+});
+
+removeAndPick.addEventListener("click", () => {
+  if (currentIndex === null) return;
+
+  options.splice(currentIndex, 1);
+  currentIndex = null;
+  saveCurrentState();
+
+  const valid = validIndexes();
+
+  if (valid.length === 1) {
+    showOnlyOne();
+  } else if (valid.length >= 2) {
+    runCountdownAndPick();
+  } else {
+    showEditor();
+  }
+});
+
+doneButton.addEventListener("click", showDone);
+onlyDoneButton.addEventListener("click", showDone);
+
+againButton.addEventListener("click", () => {
+  restoreLastPick();
+});
+
+startOver.addEventListener("click", () => {
+  resetCurrentToBlank();
+});
+
+reloadLast.addEventListener("click", () => {
+  restoreLastPick();
+});
+
+resetCurrent.addEventListener("click", () => {
+  resetCurrentToBlank();
+});
+
+function init() {
+  loadStoredState();
+  pickerTitle.value = title;
+  renderOptions();
+
+  if (phase === "result") showResult();
+  else if (phase === "only") showOnlyOne();
+  else if (phase === "done") showDone();
+  else showEditor();
+}
+
+init();
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js", { scope: "./" })
+      .then(registration => registration.update())
+      .catch(error => console.warn("Service worker registration failed:", error));
+  });
+}
+</script>
+</body>
+</html>
