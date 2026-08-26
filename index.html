@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#f4f4f1" />
+<meta name="format-detection" content="telephone=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Toolbox" />
+<link rel="manifest" href="./manifest.webmanifest" />
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
+<link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png" />
+<title>Toolbox</title>
+<style>
+:root{
+  --bg:#f4f4f1;
+  --card:#ffffff;
+  --text:#181818;
+  --muted:#6d6d68;
+  --border:#deded8;
+  --shadow:0 10px 34px rgba(0,0,0,.06);
+}
+*{box-sizing:border-box}
+html{background:var(--bg);-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  min-height:100vh;
+  min-height:100dvh;
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,"Noto Sans",sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+a,button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.wrap{
+  width:min(820px,calc(100% - 28px));
+  margin:0 auto;
+  padding:
+    calc(28px + env(safe-area-inset-top))
+    0
+    calc(42px + env(safe-area-inset-bottom));
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.brand-icon{
+  width:42px;
+  height:42px;
+  border-radius:11px;
+  flex:0 0 auto;
+}
+.eyebrow{
+  text-transform:uppercase;
+  letter-spacing:.18em;
+  font-size:11px;
+  color:var(--muted);
+  margin-bottom:5px;
+}
+h1{
+  margin:0;
+  font-size:29px;
+  letter-spacing:-.55px;
+  line-height:1.05;
+}
+.sub{
+  margin-top:9px;
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.45;
+}
+.grid{
+  margin-top:23px;
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+}
+.card{
+  display:block;
+  text-decoration:none;
+  color:inherit;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:20px;
+  min-height:132px;
+  box-shadow:var(--shadow);
+  transition:transform .15s ease,border-color .15s ease;
+}
+.card:active{transform:scale(.99)}
+@media(hover:hover){
+  .card:hover{transform:translateY(-1px);border-color:#9c9c96}
+}
+.top{
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  align-items:flex-start;
+}
+.title{font-size:18px;font-weight:760}
+.desc{
+  margin-top:6px;
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.45;
+}
+.badge{
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:6px 9px;
+  font-size:11px;
+  color:var(--muted);
+  white-space:nowrap;
+  background:#fafaf8;
+}
+.flow{
+  margin-top:24px;
+  color:var(--muted);
+  font-size:12px;
+}
+.footer{
+  margin-top:22px;
+  text-align:center;
+  color:#8b8b85;
+  font-size:11px;
+}
+@media(max-width:650px){
+  .grid{grid-template-columns:1fr}
+  .wrap{
+    width:min(100% - 24px,820px);
+    padding-top:calc(20px + env(safe-area-inset-top));
+  }
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="brand">
+    <img class="brand-icon" src="./apple-touch-icon.png" alt="" />
+    <div>
+      <div class="eyebrow">Personal</div>
+      <h1>Toolbox</h1>
+    </div>
+  </div>
+  <div class="sub">Small tools for everyday things.</div>
+
+  <section class="grid">
+    <a class="card" href="./price-compare.html">
+      <div class="top">
+        <div>
+          <div class="title">Price Compare</div>
+          <div class="desc">Compare unit prices across products and currencies.</div>
+        </div>
+        <div class="badge">Everyday</div>
+      </div>
+      <div class="flow">Price + quantity → Normalize → Rank</div>
+    </a>
+  </section>
+
+  <div class="footer">Toolbox · 1.0</div>
+</main>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js", { scope: "./" })
+      .then(registration => registration.update())
+      .catch(error => console.warn("Service worker registration failed:", error));
+  });
+}
+</script>
+</body>
+</html>
