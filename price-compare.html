@@ -11,6 +11,17 @@
 <link rel="manifest" href="./manifest.webmanifest" />
 <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
 <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png" />
+<script>
+(() => {
+  const key = "toolbox-theme-price-compare";
+  const saved = localStorage.getItem(key);
+  const mode = ["system", "dark", "light"].includes(saved) ? saved : "system";
+  const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const effective = mode === "system" ? (systemDark ? "dark" : "light") : mode;
+  document.documentElement.dataset.themeMode = mode;
+  document.documentElement.dataset.theme = effective;
+})();
+</script>
 <title>Price Compare · Toolbox</title>
 <style>
 :root{
@@ -21,9 +32,37 @@
   --border:#deded8;
   --border-strong:#b9b9b2;
   --soft:#fafaf8;
+  --input:#ffffff;
+  --remove:#8b8b85;
+  --active-soft:#f0f0ec;
+  --add-active:rgba(255,255,255,.55);
   --success:#39724d;
   --success-bg:#edf6ef;
+  --success-border:#b9d5c2;
+  --success-pill-border:#bfd9c7;
+  --fx-error:#9a5a45;
+  --footer:#8b8b85;
   --shadow:0 10px 34px rgba(0,0,0,.06);
+}
+html[data-theme="dark"]{
+  --bg:#171716;
+  --card:#232321;
+  --text:#f1f0ea;
+  --muted:#aaa9a2;
+  --border:#3b3b37;
+  --border-strong:#62615b;
+  --soft:#2a2a27;
+  --input:#1d1d1b;
+  --remove:#97968f;
+  --active-soft:#30302d;
+  --add-active:rgba(255,255,255,.06);
+  --success:#91c5a0;
+  --success-bg:#1e2c22;
+  --success-border:#3f624a;
+  --success-pill-border:#4b7056;
+  --fx-error:#d49a84;
+  --footer:#8f8e87;
+  --shadow:0 12px 36px rgba(0,0,0,.24);
 }
 *{box-sizing:border-box}
 html{background:var(--bg);-webkit-text-size-adjust:100%}
@@ -53,6 +92,11 @@ button,a{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
   gap:12px;
   margin-bottom:17px;
 }
+.topbar-actions{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
 .back{
   display:inline-flex;
   align-items:center;
@@ -62,7 +106,8 @@ button,a{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
   font-size:13px;
 }
 .back:active{color:var(--text)}
-.clear{
+.clear,
+.theme-toggle{
   min-height:36px;
   border:0;
   padding:0 4px;
@@ -70,8 +115,10 @@ button,a{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
   color:var(--muted);
   cursor:pointer;
   font-size:13px;
+  white-space:nowrap;
 }
-.clear:active{color:var(--text)}
+.clear:active,
+.theme-toggle:active{color:var(--text)}
 .eyebrow{
   text-transform:uppercase;
   letter-spacing:.18em;
@@ -131,7 +178,7 @@ h1{
 .remove{
   border:0;
   background:transparent;
-  color:#8b8b85;
+  color:var(--remove);
   font-size:24px;
   line-height:1;
   min-width:38px;
@@ -140,7 +187,7 @@ h1{
   cursor:pointer;
   border-radius:10px;
 }
-.remove:active{background:#f0f0ec;color:var(--text)}
+.remove:active{background:var(--active-soft);color:var(--text)}
 .remove:disabled{opacity:.22;cursor:default;background:transparent}
 .fields{
   display:grid;
@@ -164,7 +211,7 @@ input,select{
   min-width:0;
   height:46px;
   border:1px solid var(--border);
-  background:#fff;
+  background:var(--input);
   color:var(--text);
   outline:none;
   font-size:16px; /* prevents Safari focus zoom */
@@ -202,7 +249,7 @@ input:focus,select:focus{border-color:var(--border-strong)}
   cursor:pointer;
   font-size:14px;
 }
-.add:active{background:rgba(255,255,255,.55)}
+.add:active{background:var(--add-active)}
 .rule{
   margin-top:10px;
   color:var(--muted);
@@ -252,7 +299,7 @@ input:focus,select:focus{border-color:var(--border-strong)}
   padding:11px;
 }
 .result-row.best{
-  border-color:#b9d5c2;
+  border-color:var(--success-border);
   background:var(--success-bg);
 }
 .rank{
@@ -278,7 +325,7 @@ input:focus,select:focus{border-color:var(--border-strong)}
 }
 .best-pill{
   color:var(--success);
-  border:1px solid #bfd9c7;
+  border:1px solid var(--success-pill-border);
   border-radius:999px;
   padding:3px 7px;
   font-size:9px;
@@ -297,18 +344,22 @@ input:focus,select:focus{border-color:var(--border-strong)}
 }
 .fx{
   margin-top:11px;
-  color:#8b8b85;
+  color:var(--footer);
   font-size:10.5px;
   line-height:1.45;
 }
-.fx.error{color:#9a5a45}
+.fx.error{color:var(--fx-error)}
 .footer{
   margin-top:20px;
   text-align:center;
-  color:#8b8b85;
+  color:var(--footer);
   font-size:11px;
 }
 @media(max-width:420px){
+  .topbar{gap:8px}
+  .topbar-actions{gap:8px}
+  .back{font-size:12.5px}
+  .clear,.theme-toggle{font-size:12.5px}
   .wrap{
     width:calc(100% - 22px);
     padding-top:calc(17px + env(safe-area-inset-top));
@@ -329,7 +380,10 @@ input:focus,select:focus{border-color:var(--border-strong)}
 <main class="wrap">
   <div class="topbar">
     <a class="back" href="./index.html">← Back to Dashboard</a>
-    <button class="clear" id="resetCurrent" type="button">Reset</button>
+    <div class="topbar-actions">
+      <button class="theme-toggle" id="themeToggle" type="button">◐ System</button>
+      <button class="clear" id="resetCurrent" type="button">Reset</button>
+    </div>
   </div>
 
   <div class="eyebrow">Everyday</div>
@@ -360,6 +414,66 @@ input:focus,select:focus{border-color:var(--border-strong)}
 </main>
 
 <script>
+
+(() => {
+  const THEME_KEY = "toolbox-theme-price-compare";
+  const MODES = ["system", "dark", "light"];
+  const LABELS = {
+    system: "◐ System",
+    dark: "☾ Dark",
+    light: "☀︎ Light"
+  };
+  const media = window.matchMedia("(prefers-color-scheme: dark)");
+  const button = document.getElementById("themeToggle");
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+
+  function storedMode() {
+    const saved = localStorage.getItem(THEME_KEY);
+    return MODES.includes(saved) ? saved : "system";
+  }
+
+  function effectiveTheme(mode) {
+    return mode === "system" ? (media.matches ? "dark" : "light") : mode;
+  }
+
+  function applyTheme(mode, save = false) {
+    if (!MODES.includes(mode)) mode = "system";
+    const effective = effectiveTheme(mode);
+
+    document.documentElement.dataset.themeMode = mode;
+    document.documentElement.dataset.theme = effective;
+    document.documentElement.style.colorScheme = effective;
+
+    if (button) {
+      button.textContent = LABELS[mode];
+      button.setAttribute("aria-label", `Theme: ${mode}. Tap to change.`);
+      button.title = `Theme: ${mode}`;
+    }
+
+    if (themeMeta) {
+      themeMeta.setAttribute("content", effective === "dark" ? "#171716" : "#f4f4f1");
+    }
+
+    if (save) {
+      localStorage.setItem(THEME_KEY, mode);
+    }
+  }
+
+  button?.addEventListener("click", () => {
+    const current = document.documentElement.dataset.themeMode || storedMode();
+    const next = MODES[(MODES.indexOf(current) + 1) % MODES.length];
+    applyTheme(next, true);
+  });
+
+  media.addEventListener?.("change", () => {
+    if ((document.documentElement.dataset.themeMode || storedMode()) === "system") {
+      applyTheme("system", false);
+    }
+  });
+
+  applyTheme(storedMode(), false);
+})();
+
 const CURRENCIES = {
   EUR: { symbol: "€", name: "Euro" },
   CNY: { symbol: "¥", name: "Chinese yuan" },

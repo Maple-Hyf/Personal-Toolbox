@@ -1,4 +1,4 @@
-const CACHE_NAME = "personal-toolbox-v1.1.0";
+const CACHE_NAME = "personal-toolbox-theme-v1";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -34,9 +34,10 @@ self.addEventListener("fetch", event => {
 
   const url = new URL(event.request.url);
 
-  // Exchange-rate requests are cross-origin and cached separately in localStorage.
+  // FX requests are cross-origin and cached separately by Price Compare.
   if (url.origin !== self.location.origin) return;
 
+  // HTML/navigation: network first so GitHub replacements show up quickly.
   if (event.request.mode === "navigate") {
     event.respondWith(
       fetch(event.request)
@@ -52,6 +53,7 @@ self.addEventListener("fetch", event => {
     return;
   }
 
+  // Static app assets: cache first.
   event.respondWith(
     caches.match(event.request).then(cached => {
       if (cached) return cached;

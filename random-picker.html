@@ -11,6 +11,17 @@
 <link rel="manifest" href="./manifest.webmanifest" />
 <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
 <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png" />
+<script>
+(() => {
+  const key = "toolbox-theme-random-picker";
+  const saved = localStorage.getItem(key);
+  const mode = ["system", "dark", "light"].includes(saved) ? saved : "system";
+  const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const effective = mode === "system" ? (systemDark ? "dark" : "light") : mode;
+  document.documentElement.dataset.themeMode = mode;
+  document.documentElement.dataset.theme = effective;
+})();
+</script>
 <title>Random Picker · Toolbox</title>
 <style>
 :root{
@@ -21,15 +32,53 @@
   --border:#deded8;
   --border-strong:#b9b9b2;
   --soft:#fafaf8;
-  --accent:#181818;
+  --input:#ffffff;
+  --remove:#8b8b85;
+  --active-soft:#ecece8;
+  --add-active:rgba(255,255,255,.55);
+  --primary-bg:#181818;
+  --primary-text:#ffffff;
   --result-bg:#181818;
   --result-text:#ffffff;
+  --result-badge-bg:#ffffff;
+  --result-badge-text:#181818;
   --success:#39724d;
   --success-bg:#edf6ef;
+  --success-border:#c8dfcf;
   --warn:#8b6748;
   --warn-bg:#f7f0e8;
   --warn-border:#dcc7b2;
+  --warn-message:#5f5145;
+  --footer:#8b8b85;
   --shadow:0 10px 34px rgba(0,0,0,.06);
+}
+html[data-theme="dark"]{
+  --bg:#171716;
+  --card:#232321;
+  --text:#f1f0ea;
+  --muted:#aaa9a2;
+  --border:#3b3b37;
+  --border-strong:#62615b;
+  --soft:#2a2a27;
+  --input:#1d1d1b;
+  --remove:#97968f;
+  --active-soft:#30302d;
+  --add-active:rgba(255,255,255,.06);
+  --primary-bg:#deddd6;
+  --primary-text:#181817;
+  --result-bg:#0d0d0c;
+  --result-text:#f7f6f0;
+  --result-badge-bg:#f0efe9;
+  --result-badge-text:#181817;
+  --success:#91c5a0;
+  --success-bg:#1e2c22;
+  --success-border:#3f624a;
+  --warn:#ddb388;
+  --warn-bg:#34291f;
+  --warn-border:#604b37;
+  --warn-message:#d5bea7;
+  --footer:#8f8e87;
+  --shadow:0 12px 36px rgba(0,0,0,.24);
 }
 *{box-sizing:border-box}
 html{
@@ -66,6 +115,12 @@ button,a{
   margin-bottom:14px;
   min-height:36px;
 }
+.topbar-right{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-left:auto;
+}
 .topbar-actions{
   display:flex;
   align-items:center;
@@ -81,7 +136,8 @@ button,a{
   white-space:nowrap;
 }
 .back-dashboard:active{color:var(--text)}
-.top-action{
+.top-action,
+.theme-toggle{
   min-height:36px;
   border:0;
   padding:0 4px;
@@ -89,8 +145,10 @@ button,a{
   color:var(--muted);
   cursor:pointer;
   font-size:13px;
+  white-space:nowrap;
 }
-.top-action:active{color:var(--text)}
+.top-action:active,
+.theme-toggle:active{color:var(--text)}
 .top-action:disabled{
   opacity:.3;
   cursor:default;
@@ -126,7 +184,7 @@ input{
   width:100%;
   height:46px;
   border:1px solid var(--border);
-  background:#fff;
+  background:var(--input);
   color:var(--text);
   outline:none;
   border-radius:11px;
@@ -163,12 +221,12 @@ input:focus{border-color:var(--border-strong)}
   border:0;
   border-radius:10px;
   background:transparent;
-  color:#8b8b85;
+  color:var(--remove);
   font-size:23px;
   cursor:pointer;
 }
 .remove:active{
-  background:#ecece8;
+  background:var(--active-soft);
   color:var(--text);
 }
 .remove:disabled{
@@ -188,7 +246,7 @@ input:focus{border-color:var(--border-strong)}
   cursor:pointer;
   font-size:14px;
 }
-.add:active{background:rgba(255,255,255,.55)}
+.add:active{background:var(--add-active)}
 .hint{
   margin-top:9px;
   color:var(--muted);
@@ -201,8 +259,8 @@ input:focus{border-color:var(--border-strong)}
   margin-top:20px;
   border:0;
   border-radius:14px;
-  background:var(--accent);
-  color:#fff;
+  background:var(--primary-bg);
+  color:var(--primary-text);
   font-weight:720;
   cursor:pointer;
   font-size:15px;
@@ -283,16 +341,16 @@ input:focus{border-color:var(--border-strong)}
   letter-spacing:-1px;
 }
 .result-badge{
-  background:#fff;
-  color:#181818;
+  background:var(--result-badge-bg);
+  color:var(--result-badge-text);
 }
 .only-badge{
   background:var(--warn-bg);
   color:var(--warn);
 }
 .done-badge{
-  background:#fff;
-  border:1px solid #c8dfcf;
+  background:var(--card);
+  border:1px solid var(--success-border);
   color:var(--success);
 }
 .result-option,
@@ -326,12 +384,12 @@ input:focus{border-color:var(--border-strong)}
   font-weight:650;
   padding:10px 12px;
 }
-.action:active{background:#f0f0ec}
+.action:active{background:var(--active-soft)}
 .action.full{grid-column:1 / -1}
 .action.dark{
-  background:var(--text);
-  color:#fff;
-  border-color:var(--text);
+  background:var(--primary-bg);
+  color:var(--primary-text);
+  border-color:var(--primary-bg);
 }
 .only-card{
   background:var(--card);
@@ -357,7 +415,7 @@ input:focus{border-color:var(--border-strong)}
   margin-bottom:4px;
 }
 .only-alert span{
-  color:#5f5145;
+  color:var(--warn-message);
   font-size:13px;
   line-height:1.5;
 }
@@ -372,7 +430,7 @@ input:focus{border-color:var(--border-strong)}
 }
 .done-card{
   background:var(--success-bg);
-  border:1px solid #c8dfcf;
+  border:1px solid var(--success-border);
   border-radius:22px;
   padding:30px 22px;
   text-align:center;
@@ -380,7 +438,7 @@ input:focus{border-color:var(--border-strong)}
 .footer{
   margin-top:20px;
   text-align:center;
-  color:#8b8b85;
+  color:var(--footer);
   font-size:11px;
 }
 @media(max-width:420px){
@@ -388,9 +446,17 @@ input:focus{border-color:var(--border-strong)}
     width:calc(100% - 22px);
     padding-top:calc(17px + env(safe-area-inset-top));
   }
-  .topbar{gap:8px}
+  .topbar{
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .topbar-right{
+    gap:8px;
+    margin-left:auto;
+  }
   .topbar-actions{gap:8px}
   .back-dashboard{font-size:12.5px}
+  .top-action,.theme-toggle{font-size:12.5px}
   .option-row{
     grid-template-columns:39px minmax(0,1fr) 38px;
     gap:7px;
@@ -410,9 +476,12 @@ input:focus{border-color:var(--border-strong)}
 
   <div class="topbar">
     <a class="back-dashboard" href="./index.html">← Back to Dashboard</a>
-    <div class="topbar-actions" id="editorTopActions">
-      <button class="top-action" id="reloadLast" type="button">Reload last</button>
-      <button class="top-action" id="resetCurrent" type="button">Reset</button>
+    <div class="topbar-right">
+      <button class="theme-toggle" id="themeToggle" type="button">◐ System</button>
+      <div class="topbar-actions" id="editorTopActions">
+        <button class="top-action" id="reloadLast" type="button">Reload last</button>
+        <button class="top-action" id="resetCurrent" type="button">Reset</button>
+      </div>
     </div>
   </div>
 
@@ -496,6 +565,66 @@ input:focus{border-color:var(--border-strong)}
 </main>
 
 <script>
+
+(() => {
+  const THEME_KEY = "toolbox-theme-random-picker";
+  const MODES = ["system", "dark", "light"];
+  const LABELS = {
+    system: "◐ System",
+    dark: "☾ Dark",
+    light: "☀︎ Light"
+  };
+  const media = window.matchMedia("(prefers-color-scheme: dark)");
+  const button = document.getElementById("themeToggle");
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+
+  function storedMode() {
+    const saved = localStorage.getItem(THEME_KEY);
+    return MODES.includes(saved) ? saved : "system";
+  }
+
+  function effectiveTheme(mode) {
+    return mode === "system" ? (media.matches ? "dark" : "light") : mode;
+  }
+
+  function applyTheme(mode, save = false) {
+    if (!MODES.includes(mode)) mode = "system";
+    const effective = effectiveTheme(mode);
+
+    document.documentElement.dataset.themeMode = mode;
+    document.documentElement.dataset.theme = effective;
+    document.documentElement.style.colorScheme = effective;
+
+    if (button) {
+      button.textContent = LABELS[mode];
+      button.setAttribute("aria-label", `Theme: ${mode}. Tap to change.`);
+      button.title = `Theme: ${mode}`;
+    }
+
+    if (themeMeta) {
+      themeMeta.setAttribute("content", effective === "dark" ? "#171716" : "#f4f4f1");
+    }
+
+    if (save) {
+      localStorage.setItem(THEME_KEY, mode);
+    }
+  }
+
+  button?.addEventListener("click", () => {
+    const current = document.documentElement.dataset.themeMode || storedMode();
+    const next = MODES[(MODES.indexOf(current) + 1) % MODES.length];
+    applyTheme(next, true);
+  });
+
+  media.addEventListener?.("change", () => {
+    if ((document.documentElement.dataset.themeMode || storedMode()) === "system") {
+      applyTheme("system", false);
+    }
+  });
+
+  applyTheme(storedMode(), false);
+})();
+
 const CURRENT_STATE_KEY = "toolbox-random-picker-current-v2";
 const LAST_PICK_KEY = "toolbox-random-picker-last-pick-v1";
 

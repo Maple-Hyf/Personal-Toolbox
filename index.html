@@ -11,6 +11,17 @@
 <link rel="manifest" href="./manifest.webmanifest" />
 <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
 <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32.png" />
+<script>
+(() => {
+  const key = "toolbox-theme-dashboard";
+  const saved = localStorage.getItem(key);
+  const mode = ["system", "dark", "light"].includes(saved) ? saved : "system";
+  const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const effective = mode === "system" ? (systemDark ? "dark" : "light") : mode;
+  document.documentElement.dataset.themeMode = mode;
+  document.documentElement.dataset.theme = effective;
+})();
+</script>
 <title>Toolbox</title>
 <style>
 :root{
@@ -19,7 +30,21 @@
   --text:#181818;
   --muted:#6d6d68;
   --border:#deded8;
+  --soft:#fafaf8;
+  --hover-border:#9c9c96;
+  --footer:#8b8b85;
   --shadow:0 10px 34px rgba(0,0,0,.06);
+}
+html[data-theme="dark"]{
+  --bg:#171716;
+  --card:#232321;
+  --text:#f1f0ea;
+  --muted:#aaa9a2;
+  --border:#3b3b37;
+  --soft:#2a2a27;
+  --hover-border:#66665f;
+  --footer:#8f8e87;
+  --shadow:0 12px 36px rgba(0,0,0,.24);
 }
 *{box-sizing:border-box}
 html{background:var(--bg);-webkit-text-size-adjust:100%}
@@ -33,6 +58,17 @@ body{
   -webkit-font-smoothing:antialiased;
 }
 a,button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.theme-toggle{
+  min-height:36px;
+  border:0;
+  padding:0 4px;
+  background:transparent;
+  color:var(--muted);
+  cursor:pointer;
+  font-size:13px;
+  white-space:nowrap;
+}
+.theme-toggle:active{color:var(--text)}
 .wrap{
   width:min(820px,calc(100% - 28px));
   margin:0 auto;
@@ -41,16 +77,26 @@ a,button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
     0
     calc(42px + env(safe-area-inset-bottom));
 }
+.header-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+}
 .brand{
   display:flex;
   align-items:center;
   gap:12px;
+  min-width:0;
 }
 .brand-icon{
   width:42px;
   height:42px;
   border-radius:11px;
   flex:0 0 auto;
+}
+html[data-theme="dark"] .brand-icon{
+  box-shadow:0 0 0 1px var(--border);
 }
 .eyebrow{
   text-transform:uppercase;
@@ -91,7 +137,7 @@ h1{
 }
 .card:active{transform:scale(.99)}
 @media(hover:hover){
-  .card:hover{transform:translateY(-1px);border-color:#9c9c96}
+  .card:hover{transform:translateY(-1px);border-color:var(--hover-border)}
 }
 .top{
   display:flex;
@@ -113,7 +159,7 @@ h1{
   font-size:11px;
   color:var(--muted);
   white-space:nowrap;
-  background:#fafaf8;
+  background:var(--soft);
 }
 .flow{
   margin-top:24px;
@@ -123,7 +169,7 @@ h1{
 .footer{
   margin-top:22px;
   text-align:center;
-  color:#8b8b85;
+  color:var(--footer);
   font-size:11px;
 }
 @media(max-width:650px){
@@ -137,12 +183,15 @@ h1{
 </head>
 <body>
 <main class="wrap">
-  <div class="brand">
-    <img class="brand-icon" src="./apple-touch-icon.png" alt="" />
-    <div>
-      <div class="eyebrow">Personal</div>
-      <h1>Toolbox</h1>
+  <div class="header-row">
+    <div class="brand">
+      <img class="brand-icon" src="./apple-touch-icon.png" alt="" />
+      <div>
+        <div class="eyebrow">Personal</div>
+        <h1>Toolbox</h1>
+      </div>
     </div>
+    <button class="theme-toggle" id="themeToggle" type="button">◐ System</button>
   </div>
   <div class="sub">Small tools for everyday things.</div>
 
@@ -174,6 +223,66 @@ h1{
 </main>
 
 <script>
+
+(() => {
+  const THEME_KEY = "toolbox-theme-dashboard";
+  const MODES = ["system", "dark", "light"];
+  const LABELS = {
+    system: "◐ System",
+    dark: "☾ Dark",
+    light: "☀︎ Light"
+  };
+  const media = window.matchMedia("(prefers-color-scheme: dark)");
+  const button = document.getElementById("themeToggle");
+  const themeMeta = document.querySelector('meta[name="theme-color"]');
+
+  function storedMode() {
+    const saved = localStorage.getItem(THEME_KEY);
+    return MODES.includes(saved) ? saved : "system";
+  }
+
+  function effectiveTheme(mode) {
+    return mode === "system" ? (media.matches ? "dark" : "light") : mode;
+  }
+
+  function applyTheme(mode, save = false) {
+    if (!MODES.includes(mode)) mode = "system";
+    const effective = effectiveTheme(mode);
+
+    document.documentElement.dataset.themeMode = mode;
+    document.documentElement.dataset.theme = effective;
+    document.documentElement.style.colorScheme = effective;
+
+    if (button) {
+      button.textContent = LABELS[mode];
+      button.setAttribute("aria-label", `Theme: ${mode}. Tap to change.`);
+      button.title = `Theme: ${mode}`;
+    }
+
+    if (themeMeta) {
+      themeMeta.setAttribute("content", effective === "dark" ? "#171716" : "#f4f4f1");
+    }
+
+    if (save) {
+      localStorage.setItem(THEME_KEY, mode);
+    }
+  }
+
+  button?.addEventListener("click", () => {
+    const current = document.documentElement.dataset.themeMode || storedMode();
+    const next = MODES[(MODES.indexOf(current) + 1) % MODES.length];
+    applyTheme(next, true);
+  });
+
+  media.addEventListener?.("change", () => {
+    if ((document.documentElement.dataset.themeMode || storedMode()) === "system") {
+      applyTheme("system", false);
+    }
+  });
+
+  applyTheme(storedMode(), false);
+})();
+
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("./service-worker.js", { scope: "./" })
