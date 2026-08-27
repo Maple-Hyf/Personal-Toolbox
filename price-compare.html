@@ -107,6 +107,7 @@ button,a{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 }
 .back:active{color:var(--text)}
 .clear,
+.reload-last,
 .theme-toggle{
   min-height:36px;
   border:0;
@@ -118,7 +119,12 @@ button,a{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
   white-space:nowrap;
 }
 .clear:active,
+.reload-last:active,
 .theme-toggle:active{color:var(--text)}
+.reload-last:disabled{
+  opacity:.3;
+  cursor:default;
+}
 .eyebrow{
   text-transform:uppercase;
   letter-spacing:.18em;
@@ -356,10 +362,16 @@ input:focus,select:focus{border-color:var(--border-strong)}
   font-size:11px;
 }
 @media(max-width:420px){
-  .topbar{gap:8px}
-  .topbar-actions{gap:8px}
+  .topbar{
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .topbar-actions{
+    gap:8px;
+    margin-left:auto;
+  }
   .back{font-size:12.5px}
-  .clear,.theme-toggle{font-size:12.5px}
+  .clear,.reload-last,.theme-toggle{font-size:12.5px}
   .wrap{
     width:calc(100% - 22px);
     padding-top:calc(17px + env(safe-area-inset-top));
@@ -382,6 +394,7 @@ input:focus,select:focus{border-color:var(--border-strong)}
     <a class="back" href="./index.html">← Back to Dashboard</a>
     <div class="topbar-actions">
       <button class="theme-toggle" id="themeToggle" type="button">◐ System</button>
+      <button class="reload-last" id="reloadLast" type="button">Reload last</button>
       <button class="clear" id="resetCurrent" type="button">Reset</button>
     </div>
   </div>
@@ -485,11 +498,13 @@ const CURRENCIES = {
 const CURRENCY_CODES = Object.keys(CURRENCIES);
 const FX_CACHE_KEY = "toolbox-price-compare-fx-v2";
 const STATE_KEY = "toolbox-price-compare-state-v1";
+const LAST_COMPARE_KEY = "toolbox-price-compare-last-v1";
 
 const blankProduct = () => ({ price: "", currency: "EUR", quantity: "", note: "" });
 
 let products = [blankProduct(), blankProduct()];
 let outputCurrency = "EUR";
+let lastCompareSnapshot = null;
 
 let fxRates = null; // EUR base: units of each currency per 1 EUR
 let fxDate = null;
@@ -500,6 +515,7 @@ const resultListEl = document.getElementById("resultList");
 const outputCurrencyEl = document.getElementById("outputCurrency");
 const fxStatusEl = document.getElementById("fxStatus");
 const addProductEl = document.getElementById("addProduct");
+const reloadLastEl = document.getElementById("reloadLast");
 const resetCurrentEl = document.getElementById("resetCurrent");
 
 function productLabel(index) {
@@ -559,6 +575,98 @@ function saveState() {
   } catch (error) {
     console.warn("Could not save state:", error);
   }
+}
+
+function cleanCompareSnapshot(snapshot) {
+  if (!snapshot || !Array.isArray(snapshot.products) || snapshot.products.length < 2) {
+    return null;
+  }
+
+  const cleanedProducts = snapshot.products.map(p => ({
+    price: String(p?.price ?? ""),
+    currency: CURRENCY_CODES.includes(p?.currency) ? p.currency : "EUR",
+    quantity: String(p?.quantity ?? ""),
+    note: String(p?.note ?? "").slice(0, 80)
+  }));
+
+  const completeCount = cleanedProducts.filter(p => {
+    return parseInputNumber(p.price) > 0 && parseInputNumber(p.quantity) > 0;
+  }).length;
+
+  if (completeCount < 2) return null;
+
+  return {
+    products: cleanedProducts,
+    outputCurrency: CURRENCY_CODES.includes(snapshot.outputCurrency)
+      ? snapshot.outputCurrency
+      : "EUR"
+  };
+}
+
+function updateReloadButton() {
+  reloadLastEl.disabled = !lastCompareSnapshot;
+}
+
+function saveLastCompareIfReady() {
+  const completeCount = products.filter(product => {
+    return parseInputNumber(product.price) > 0 &&
+           parseInputNumber(product.quantity) > 0;
+  }).length;
+
+  if (completeCount < 2) {
+    updateReloadButton();
+    return;
+  }
+
+  lastCompareSnapshot = {
+    products: products.map(product => ({ ...product })),
+    outputCurrency
+  };
+
+  try {
+    localStorage.setItem(LAST_COMPARE_KEY, JSON.stringify(lastCompareSnapshot));
+  } catch (error) {
+    console.warn("Could not save last comparison:", error);
+  }
+
+  updateReloadButton();
+}
+
+function loadLastCompare() {
+  try {
+    lastCompareSnapshot = cleanCompareSnapshot(
+      JSON.parse(localStorage.getItem(LAST_COMPARE_KEY) || "null")
+    );
+  } catch (error) {
+    console.warn("Could not restore last comparison:", error);
+    lastCompareSnapshot = null;
+  }
+
+  updateReloadButton();
+}
+
+function restoreLastCompare() {
+  if (!lastCompareSnapshot) return;
+
+  const restored = cleanCompareSnapshot(lastCompareSnapshot);
+  if (!restored) {
+    lastCompareSnapshot = null;
+    updateReloadButton();
+    return;
+  }
+
+  products = restored.products.map(product => ({ ...product }));
+  outputCurrency = restored.outputCurrency;
+
+  outputCurrencyEl.value = outputCurrency;
+  renderProducts();
+  renderResults();
+  saveState();
+  updateReloadButton();
+
+  setTimeout(() => {
+    productsEl.querySelector('[data-field="price"]')?.focus();
+  }, 50);
 }
 
 function loadState() {
@@ -814,6 +922,7 @@ productsEl.addEventListener("input", event => {
   }
 
   saveState();
+  saveLastCompareIfReady();
   renderResults();
 });
 
@@ -825,6 +934,7 @@ productsEl.addEventListener("change", event => {
   const index = Number(productEl.dataset.index);
   products[index][field] = event.target.value;
   saveState();
+  saveLastCompareIfReady();
   renderResults();
 });
 
@@ -836,6 +946,7 @@ productsEl.addEventListener("click", event => {
   const index = Number(productEl.dataset.index);
   products.splice(index, 1);
   saveState();
+  saveLastCompareIfReady();
   renderProducts();
   renderResults();
 });
@@ -843,6 +954,7 @@ productsEl.addEventListener("click", event => {
 addProductEl.addEventListener("click", () => {
   products.push(blankProduct());
   saveState();
+  saveLastCompareIfReady();
   renderProducts();
   renderResults();
 
@@ -857,7 +969,12 @@ addProductEl.addEventListener("click", () => {
 outputCurrencyEl.addEventListener("change", () => {
   outputCurrency = outputCurrencyEl.value;
   saveState();
+  saveLastCompareIfReady();
   renderResults();
+});
+
+reloadLastEl.addEventListener("click", () => {
+  restoreLastCompare();
 });
 
 resetCurrentEl.addEventListener("click", () => {
@@ -884,8 +1001,14 @@ resetCurrentEl.addEventListener("click", () => {
 
 function init() {
   loadState();
+  loadLastCompare();
   outputCurrencyEl.innerHTML = currencyOptions(outputCurrency);
   renderProducts();
+  updateReloadButton();
+
+  // If this browser already has a complete current comparison but no
+  // historical snapshot yet, promote the current data to "last".
+  saveLastCompareIfReady();
 
   loadCachedRates();
   renderFxStatus();

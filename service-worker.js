@@ -1,4 +1,4 @@
-const CACHE_NAME = "personal-toolbox-theme-v1";
+const CACHE_NAME = "personal-toolbox-reload-last-v1";
 const APP_SHELL = [
   "./",
   "./index.html",
