@@ -697,6 +697,7 @@ const FX_CACHE_KEY = "toolbox-price-compare-fx-v2";
 const STATE_KEY = "toolbox-price-compare-state-v1";
 const LAST_COMPARE_KEY = "toolbox-price-compare-last-v1";
 const LAST_CALCULATOR_KEY = "toolbox-price-calculator-last-v1";
+const TOOL_MODE_KEY = "toolbox-price-tools-mode-v1";
 
 const blankProduct = () => ({ price: "", currency: "EUR", quantity: "", note: "" });
 
@@ -1018,9 +1019,25 @@ function loadState() {
   }
 }
 
-function setToolMode(nextMode) {
+function storedToolMode() {
+  try {
+    return localStorage.getItem(TOOL_MODE_KEY) === "calculator" ? "calculator" : "compare";
+  } catch (error) {
+    return "compare";
+  }
+}
+
+function setToolMode(nextMode, persist = true) {
   currentToolMode = nextMode === "calculator" ? "calculator" : "compare";
   const isCompare = currentToolMode === "compare";
+
+  if (persist) {
+    try {
+      localStorage.setItem(TOOL_MODE_KEY, currentToolMode);
+    } catch (error) {
+      console.warn("Could not save Price Tools mode:", error);
+    }
+  }
 
   compareModeBtn.classList.toggle("active", isCompare);
   calculatorModeBtn.classList.toggle("active", !isCompare);
@@ -1565,6 +1582,12 @@ resetCurrentEl.addEventListener("click", () => {
   }, 50);
 });
 
+window.addEventListener("pagehide", () => {
+  // Preserve the latest valid records across closing/reopening the installed web app.
+  saveLastCompareIfReady();
+  saveLastCalculatorIfReady();
+});
+
 function init() {
   loadState();
   loadLastCompare();
@@ -1575,7 +1598,7 @@ function init() {
   discountTypeEl.value = calculatorState.type;
   renderCalculatorFields();
   renderCalculatorResult();
-  setToolMode("compare");
+  setToolMode(storedToolMode(), false);
   renderProducts();
   updateReloadButton();
 

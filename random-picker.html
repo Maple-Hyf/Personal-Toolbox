@@ -627,6 +627,7 @@ input:focus{border-color:var(--border-strong)}
 
 const CURRENT_STATE_KEY = "toolbox-random-picker-current-v2";
 const LAST_PICK_KEY = "toolbox-random-picker-last-pick-v1";
+const LAST_SESSION_KEY = "toolbox-random-picker-last-session-v1";
 
 const blankOptions = () => [{ text: "" }, { text: "" }];
 
@@ -636,6 +637,7 @@ let phase = "editing"; // editing | result | only | done
 let currentIndex = null;
 let drawCount = 0; // number of random draws in the current round
 let lastPickSnapshot = null;
+let lastSessionSnapshot = null;
 
 const editor = document.getElementById("editor");
 const optionsEl = document.getElementById("options");
@@ -726,15 +728,33 @@ function saveCurrentState() {
 }
 
 function saveLastPickSnapshot() {
-  lastPickSnapshot = {
-    title,
-    options: options.map(item => ({ text: item.text }))
-  };
+  lastPickSnapshot = cleanSnapshot({ title, options });
+  if (!lastPickSnapshot) {
+    updateReloadButton();
+    return;
+  }
 
   try {
     localStorage.setItem(LAST_PICK_KEY, JSON.stringify(lastPickSnapshot));
   } catch (error) {
     console.warn("Could not save last pick snapshot:", error);
+  }
+
+  updateReloadButton();
+}
+
+function saveLastSessionIfReady() {
+  const snapshot = cleanSnapshot({ title, options });
+  if (!snapshot) {
+    updateReloadButton();
+    return;
+  }
+
+  lastSessionSnapshot = snapshot;
+  try {
+    localStorage.setItem(LAST_SESSION_KEY, JSON.stringify(lastSessionSnapshot));
+  } catch (error) {
+    console.warn("Could not save last picker session:", error);
   }
 
   updateReloadButton();
@@ -771,6 +791,19 @@ function loadStoredState() {
     lastPickSnapshot = cleanSnapshot(
       JSON.parse(localStorage.getItem(LAST_PICK_KEY) || "null")
     );
+    lastSessionSnapshot = cleanSnapshot(
+      JSON.parse(localStorage.getItem(LAST_SESSION_KEY) || "null")
+    );
+
+    // Upgrade existing installs gracefully: a valid current workspace from an
+    // older version becomes immediately available through Reload last.
+    if (!lastSessionSnapshot) {
+      const currentSnapshot = cleanSnapshot({ title, options });
+      if (currentSnapshot) {
+        lastSessionSnapshot = currentSnapshot;
+        localStorage.setItem(LAST_SESSION_KEY, JSON.stringify(lastSessionSnapshot));
+      }
+    }
 
     const valid = validIndexes();
 
@@ -819,11 +852,11 @@ function updatePickButton() {
 }
 
 function updateReloadButton() {
-  reloadLast.disabled = !lastPickSnapshot;
+  reloadLast.disabled = !(lastSessionSnapshot || lastPickSnapshot);
 }
 
 function showOnly(stage) {
-  editorTopActions.classList.add("hidden");
+  editorTopActions.classList.remove("hidden");
   editor.classList.add("hidden");
   countdownStage.classList.add("hidden");
   resultStage.classList.add("hidden");
@@ -989,17 +1022,26 @@ function resetCurrentToBlank() {
   }, 50);
 }
 
-function restoreLastPick() {
-  if (!lastPickSnapshot) return;
+function restoreSnapshot(snapshot) {
+  const restored = cleanSnapshot(snapshot);
+  if (!restored) return;
 
   countdownToken++;
-  title = lastPickSnapshot.title;
-  options = lastPickSnapshot.options.map(item => ({ text: item.text }));
+  title = restored.title;
+  options = restored.options.map(item => ({ text: item.text }));
   phase = "editing";
   currentIndex = null;
   drawCount = 0;
   saveCurrentState();
   showEditor();
+}
+
+function restoreLastPick() {
+  restoreSnapshot(lastPickSnapshot);
+}
+
+function restoreLastSession() {
+  restoreSnapshot(lastSessionSnapshot || lastPickSnapshot);
 }
 
 function insertOptionsAt(index, texts) {
@@ -1018,6 +1060,7 @@ function insertOptionsAt(index, texts) {
   }
 
   saveCurrentState();
+  saveLastSessionIfReady();
   renderOptions();
 }
 
@@ -1025,6 +1068,7 @@ function addBlankAfter(index) {
   const insertAt = index + 1;
   options.splice(insertAt, 0, { text: "" });
   saveCurrentState();
+  saveLastSessionIfReady();
   renderOptions();
 
   requestAnimationFrame(() => {
@@ -1036,6 +1080,7 @@ function addBlankAfter(index) {
 pickerTitle.addEventListener("input", () => {
   title = pickerTitle.value;
   saveCurrentState();
+  saveLastSessionIfReady();
 });
 
 optionsEl.addEventListener("input", event => {
@@ -1045,6 +1090,7 @@ optionsEl.addEventListener("input", event => {
   const index = Number(row.dataset.index);
   options[index].text = event.target.value;
   saveCurrentState();
+  saveLastSessionIfReady();
   updatePickButton();
 });
 
@@ -1090,12 +1136,14 @@ optionsEl.addEventListener("click", event => {
   }
 
   saveCurrentState();
+  saveLastSessionIfReady();
   renderOptions();
 });
 
 addOption.addEventListener("click", () => {
   options.push({ text: "" });
   saveCurrentState();
+  saveLastSessionIfReady();
   renderOptions();
 
   requestAnimationFrame(() => {
@@ -1108,6 +1156,7 @@ pickButton.addEventListener("click", () => {
   title = pickerTitle.value;
   drawCount = 0;
   saveLastPickSnapshot();
+  saveLastSessionIfReady();
   saveCurrentState();
   runCountdownAndPick();
 });
@@ -1146,11 +1195,15 @@ startOver.addEventListener("click", () => {
 });
 
 reloadLast.addEventListener("click", () => {
-  restoreLastPick();
+  restoreLastSession();
 });
 
 resetCurrent.addEventListener("click", () => {
   resetCurrentToBlank();
+});
+
+window.addEventListener("pagehide", () => {
+  if (phase === "editing") saveLastSessionIfReady();
 });
 
 function init() {
