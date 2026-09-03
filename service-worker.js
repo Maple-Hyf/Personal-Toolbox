@@ -1,4 +1,4 @@
-const CACHE_NAME = "personal-toolbox-price-tools-v3";
+const CACHE_NAME = "personal-toolbox-price-tools-v4";
 const APP_SHELL = [
   "./",
   "./index.html",
