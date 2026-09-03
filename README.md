@@ -1,11 +1,13 @@
-# Personal Toolbox 1.1
+# Personal Toolbox 1.2
 
 Small everyday tools for personal use.
 
 ## Tools
 
-### Price Compare
-Compare unit prices across products and supported currencies.
+### Price Tools
+- Price Compare: compare unit prices across products and supported currencies.
+- Price Calculator: calculate effective price per item for percentage discounts, Buy X Get Y Free, Nth Item Discount, and fixed discounts with an optional minimum spend.
+- Reload last is available in both price modes.
 
 ### Random Picker
 A lightweight decision helper for choice paralysis.
@@ -33,7 +35,7 @@ The link points to the Toolbox's own `index.html`.
 ## Files
 
 - `index.html`
-- `price-compare.html`
+- `price-tools.html`
 - `random-picker.html`
 - `manifest.webmanifest`
 - `service-worker.js`

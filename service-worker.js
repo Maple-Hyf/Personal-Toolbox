@@ -1,8 +1,8 @@
-const CACHE_NAME = "personal-toolbox-reload-last-v1";
+const CACHE_NAME = "personal-toolbox-price-tools-v3";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./price-compare.html",
+  "./price-tools.html",
   "./random-picker.html",
   "./manifest.webmanifest",
   "./apple-touch-icon.png",
@@ -34,7 +34,7 @@ self.addEventListener("fetch", event => {
 
   const url = new URL(event.request.url);
 
-  // FX requests are cross-origin and cached separately by Price Compare.
+  // FX requests are cross-origin and cached separately by Price Tools.
   if (url.origin !== self.location.origin) return;
 
   // HTML/navigation: network first so GitHub replacements show up quickly.
