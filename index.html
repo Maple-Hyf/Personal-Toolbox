@@ -84,19 +84,7 @@ a,button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
   gap:14px;
 }
 .brand{
-  display:flex;
-  align-items:center;
-  gap:12px;
   min-width:0;
-}
-.brand-icon{
-  width:42px;
-  height:42px;
-  border-radius:11px;
-  flex:0 0 auto;
-}
-html[data-theme="dark"] .brand-icon{
-  box-shadow:0 0 0 1px var(--border);
 }
 .eyebrow{
   text-transform:uppercase;
@@ -185,11 +173,8 @@ h1{
 <main class="wrap">
   <div class="header-row">
     <div class="brand">
-      <img class="brand-icon" src="./apple-touch-icon.png" alt="" />
-      <div>
-        <div class="eyebrow">Personal</div>
-        <h1>Toolbox</h1>
-      </div>
+      <div class="eyebrow">Personal</div>
+      <h1>Toolbox</h1>
     </div>
     <button class="theme-toggle" id="themeToggle" type="button">◐ System</button>
   </div>
