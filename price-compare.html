@@ -144,6 +144,140 @@ h1{
   font-size:14px;
   line-height:1.5;
 }
+
+.mode-switch{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px;
+  margin-top:18px;
+  padding:5px;
+  border-radius:14px;
+  background:var(--active-soft);
+}
+.mode-btn{
+  min-height:44px;
+  border:0;
+  border-radius:10px;
+  background:transparent;
+  color:var(--muted);
+  cursor:pointer;
+  padding:10px 12px;
+  font-size:14px;
+  font-weight:750;
+}
+.mode-btn.active{
+  background:var(--card);
+  color:var(--text);
+  box-shadow:0 2px 9px rgba(0,0,0,.07);
+}
+html[data-theme="dark"] .mode-btn.active{
+  box-shadow:0 2px 9px rgba(0,0,0,.18);
+}
+.hidden{display:none!important}
+.calculator-mode{margin-top:22px}
+.calculator-card,
+.calculator-results{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:16px;
+  box-shadow:var(--shadow);
+}
+.calculator-card{display:grid;gap:14px}
+.calculator-fields{display:grid;gap:10px}
+.calculator-two-fields{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.percent-control,
+.money-control{
+  display:grid;
+  align-items:stretch;
+}
+.percent-control{grid-template-columns:minmax(0,1fr) 70px}
+.money-control{grid-template-columns:42px minmax(0,1fr)}
+.percent-control input{
+  border-radius:11px 0 0 11px;
+  border-right:0;
+}
+.money-control input{
+  border-radius:0 11px 11px 0;
+  border-left:0;
+}
+.control-affix{
+  min-width:0;
+  height:46px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid var(--border);
+  background:var(--soft);
+  color:var(--muted);
+  font-size:13px;
+  white-space:nowrap;
+}
+.percent-control .control-affix{border-radius:0 11px 11px 0}
+.money-control .control-affix{border-radius:11px 0 0 11px}
+.calculator-results{
+  margin-top:11px;
+  min-height:164px;
+  display:flex;
+  align-items:center;
+}
+.calculator-result-content{width:100%}
+.effective-label{
+  color:var(--muted);
+  font-size:11px;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+}
+.effective-price{
+  margin-top:5px;
+  font-size:34px;
+  line-height:1.05;
+  letter-spacing:-.8px;
+  font-weight:800;
+}
+.effective-price .effective-unit{
+  color:var(--muted);
+  font-size:15px;
+  font-weight:650;
+  letter-spacing:0;
+}
+.calculator-summary{
+  margin-top:15px;
+  padding-top:13px;
+  border-top:1px solid var(--border);
+  display:grid;
+  gap:7px;
+}
+.calculator-summary-row{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:14px;
+  font-size:13px;
+}
+.calculator-summary-row span:first-child{color:var(--muted)}
+.calculator-summary-row strong{
+  text-align:right;
+  font-weight:720;
+}
+.calculator-summary-row.secondary strong{
+  color:var(--muted);
+  font-weight:600;
+}
+.calculator-empty{
+  width:100%;
+  color:var(--muted);
+  text-align:center;
+  font-size:13px;
+  line-height:1.5;
+  padding:20px 14px;
+}
+
 .stack{
   margin-top:22px;
   display:grid;
@@ -376,6 +510,12 @@ input:focus,select:focus{border-color:var(--border-strong)}
     width:calc(100% - 22px);
     padding-top:calc(17px + env(safe-area-inset-top));
   }
+
+  .mode-switch{margin-top:16px}
+  .mode-btn{font-size:13.5px;padding:10px 8px}
+  .calculator-card,.calculator-results{padding:14px}
+  .effective-price{font-size:32px}
+  .calculator-summary-row{gap:10px}
   .product{padding:14px}
   .price-control{grid-template-columns:minmax(0,1fr) 84px}
   .fields{grid-template-columns:minmax(0,1.38fr) minmax(0,.82fr);gap:8px}
@@ -400,27 +540,84 @@ input:focus,select:focus{border-color:var(--border-strong)}
   </div>
 
   <div class="eyebrow">Everyday</div>
-  <h1>Price Compare</h1>
-  <div class="sub">Compare any number of products by price and quantity. Currencies can differ.</div>
+  <h1 id="pageTitle">Price Compare</h1>
+  <div class="sub" id="pageSubtitle">Compare any number of products by price and quantity. Currencies can differ.</div>
 
-  <section class="stack" id="products"></section>
-  <button class="add" id="addProduct" type="button">+ Add product</button>
-  <div class="rule">Use the same quantity unit for every product — for example all g, all ml, or all pieces.</div>
+  <div class="mode-switch" aria-label="Price tool">
+    <button class="mode-btn active" id="compareModeBtn" type="button">Price Compare</button>
+    <button class="mode-btn" id="calculatorModeBtn" type="button">Price Calculator</button>
+  </div>
 
-  <section class="results">
-    <div class="results-head">
-      <div>
-        <div class="results-title">Best value</div>
-        <div class="results-sub">Normalized to price per 100 quantity units.</div>
+  <section id="compareMode">
+    <section class="stack" id="products"></section>
+    <button class="add" id="addProduct" type="button">+ Add product</button>
+    <div class="rule">Use the same quantity unit for every product — for example all g, all ml, or all pieces.</div>
+
+    <section class="results">
+      <div class="results-head">
+        <div>
+          <div class="results-title">Best value</div>
+          <div class="results-sub">Normalized to price per 100 quantity units.</div>
+        </div>
+        <div class="output">
+          <label for="outputCurrency">Compare in</label>
+          <select id="outputCurrency" aria-label="Output currency"></select>
+        </div>
       </div>
-      <div class="output">
-        <label for="outputCurrency">Compare in</label>
-        <select id="outputCurrency" aria-label="Output currency"></select>
-      </div>
-    </div>
 
-    <div class="result-list" id="resultList"></div>
-    <div class="fx" id="fxStatus">Loading exchange rates…</div>
+      <div class="result-list" id="resultList"></div>
+      <div class="fx" id="fxStatus">Loading exchange rates…</div>
+    </section>
+  </section>
+
+  <section class="calculator-mode hidden" id="calculatorMode">
+    <section class="calculator-card">
+      <div class="field">
+        <label for="calculatorOriginalPrice">Original Price / item</label>
+        <div class="price-control">
+          <input
+            id="calculatorOriginalPrice"
+            type="text"
+            inputmode="decimal"
+            autocomplete="off"
+            placeholder="10.00"
+            aria-label="Original price per item"
+          />
+          <select id="calculatorCurrency" aria-label="Calculator currency"></select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="discountType">Discount Type</label>
+        <select id="discountType">
+          <option value="percentage">Percentage Off</option>
+          <option value="buy-get">Buy X Get Y Free</option>
+          <option value="nth-item">Nth Item Discount</option>
+          <option value="fixed">Fixed Discount</option>
+        </select>
+      </div>
+
+      <div class="calculator-fields" id="calculatorFields"></div>
+    </section>
+
+    <section class="calculator-results" aria-live="polite">
+      <div class="calculator-empty" id="calculatorEmpty">Enter an original price and discount details.</div>
+      <div class="calculator-result-content hidden" id="calculatorResultContent">
+        <div class="effective-label">Effective price</div>
+        <div class="effective-price"><span id="effectivePriceValue">—</span> <span class="effective-unit">/ item</span></div>
+
+        <div class="calculator-summary">
+          <div class="calculator-summary-row">
+            <span>You pay</span>
+            <strong id="calculatorTotal">—</strong>
+          </div>
+          <div class="calculator-summary-row secondary">
+            <span>Difference</span>
+            <strong id="calculatorSavings">—</strong>
+          </div>
+        </div>
+      </div>
+    </section>
   </section>
 
   <div class="footer">Toolbox · Price Compare 1.1.1</div>
@@ -517,6 +714,36 @@ const fxStatusEl = document.getElementById("fxStatus");
 const addProductEl = document.getElementById("addProduct");
 const reloadLastEl = document.getElementById("reloadLast");
 const resetCurrentEl = document.getElementById("resetCurrent");
+
+const compareModeBtn = document.getElementById("compareModeBtn");
+const calculatorModeBtn = document.getElementById("calculatorModeBtn");
+const compareModeEl = document.getElementById("compareMode");
+const calculatorModeEl = document.getElementById("calculatorMode");
+const pageTitleEl = document.getElementById("pageTitle");
+const pageSubtitleEl = document.getElementById("pageSubtitle");
+const calculatorOriginalPriceEl = document.getElementById("calculatorOriginalPrice");
+const calculatorCurrencyEl = document.getElementById("calculatorCurrency");
+const discountTypeEl = document.getElementById("discountType");
+const calculatorFieldsEl = document.getElementById("calculatorFields");
+const calculatorEmptyEl = document.getElementById("calculatorEmpty");
+const calculatorResultContentEl = document.getElementById("calculatorResultContent");
+const effectivePriceValueEl = document.getElementById("effectivePriceValue");
+const calculatorTotalEl = document.getElementById("calculatorTotal");
+const calculatorSavingsEl = document.getElementById("calculatorSavings");
+
+let currentToolMode = "compare";
+const calculatorState = {
+  originalPrice: "",
+  currency: "EUR",
+  type: "percentage",
+  percentage: "",
+  buyX: "1",
+  getY: "1",
+  nth: "2",
+  nthPercentage: "50",
+  fixedDiscount: "",
+  minimumSpend: ""
+};
 
 function productLabel(index) {
   let n = index + 1;
@@ -689,6 +916,205 @@ function loadState() {
   } catch (error) {
     console.warn("Could not restore state:", error);
   }
+}
+
+function setToolMode(nextMode) {
+  currentToolMode = nextMode === "calculator" ? "calculator" : "compare";
+  const isCompare = currentToolMode === "compare";
+
+  compareModeBtn.classList.toggle("active", isCompare);
+  calculatorModeBtn.classList.toggle("active", !isCompare);
+  compareModeEl.classList.toggle("hidden", !isCompare);
+  calculatorModeEl.classList.toggle("hidden", isCompare);
+  reloadLastEl.hidden = !isCompare;
+
+  pageTitleEl.textContent = isCompare ? "Price Compare" : "Price Calculator";
+  pageSubtitleEl.textContent = isCompare
+    ? "Compare any number of products by price and quantity. Currencies can differ."
+    : "Calculate the effective price per item for common discounts.";
+}
+
+function renderCalculatorFields() {
+  const symbol = CURRENCIES[calculatorState.currency].symbol;
+
+  if (calculatorState.type === "percentage") {
+    calculatorFieldsEl.innerHTML = `
+      <div class="field">
+        <label for="percentageOff">Discount</label>
+        <div class="percent-control">
+          <input id="percentageOff" type="text" inputmode="decimal" autocomplete="off"
+            placeholder="30" value="${escapeHtml(calculatorState.percentage)}" data-calculator-field="percentage" />
+          <span class="control-affix">% off</span>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  if (calculatorState.type === "buy-get") {
+    calculatorFieldsEl.innerHTML = `
+      <div class="calculator-two-fields">
+        <div class="field">
+          <label for="buyX">Buy</label>
+          <input id="buyX" type="text" inputmode="numeric" autocomplete="off"
+            value="${escapeHtml(calculatorState.buyX)}" data-calculator-field="buyX" />
+        </div>
+        <div class="field">
+          <label for="getY">Get Free</label>
+          <input id="getY" type="text" inputmode="numeric" autocomplete="off"
+            value="${escapeHtml(calculatorState.getY)}" data-calculator-field="getY" />
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  if (calculatorState.type === "nth-item") {
+    calculatorFieldsEl.innerHTML = `
+      <div class="calculator-two-fields">
+        <div class="field">
+          <label for="nthItem">Every Nth Item</label>
+          <input id="nthItem" type="text" inputmode="numeric" autocomplete="off"
+            value="${escapeHtml(calculatorState.nth)}" data-calculator-field="nth" />
+        </div>
+        <div class="field">
+          <label for="nthPercentage">Discount</label>
+          <div class="percent-control">
+            <input id="nthPercentage" type="text" inputmode="decimal" autocomplete="off"
+              value="${escapeHtml(calculatorState.nthPercentage)}" data-calculator-field="nthPercentage" />
+            <span class="control-affix">% off</span>
+          </div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  calculatorFieldsEl.innerHTML = `
+    <div class="calculator-two-fields">
+      <div class="field">
+        <label for="fixedDiscount">Discount</label>
+        <div class="money-control">
+          <span class="control-affix">${escapeHtml(symbol)}</span>
+          <input id="fixedDiscount" type="text" inputmode="decimal" autocomplete="off"
+            placeholder="5.00" value="${escapeHtml(calculatorState.fixedDiscount)}" data-calculator-field="fixedDiscount" />
+        </div>
+      </div>
+      <div class="field">
+        <label for="minimumSpend">Minimum Spend <span style="font-weight:400">(optional)</span></label>
+        <div class="money-control">
+          <span class="control-affix">${escapeHtml(symbol)}</span>
+          <input id="minimumSpend" type="text" inputmode="decimal" autocomplete="off"
+            placeholder="50.00" value="${escapeHtml(calculatorState.minimumSpend)}" data-calculator-field="minimumSpend" />
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function setCalculatorMessage(message) {
+  calculatorEmptyEl.textContent = message;
+  calculatorEmptyEl.classList.remove("hidden");
+  calculatorResultContentEl.classList.add("hidden");
+}
+
+function renderCalculatorResult() {
+  const price = parseInputNumber(calculatorState.originalPrice);
+  const currency = calculatorState.currency;
+
+  if (!(price > 0)) {
+    setCalculatorMessage("Enter an original price and discount details.");
+    return;
+  }
+
+  let quantity = 1;
+  let regularTotal = price;
+  let payTotal = null;
+
+  if (calculatorState.type === "percentage") {
+    const percentage = parseInputNumber(calculatorState.percentage);
+    if (!(percentage > 0) || percentage > 100) {
+      setCalculatorMessage("Enter a discount between 0 and 100%.");
+      return;
+    }
+    payTotal = price * (1 - percentage / 100);
+  } else if (calculatorState.type === "buy-get") {
+    const buyX = parseInputNumber(calculatorState.buyX);
+    const getY = parseInputNumber(calculatorState.getY);
+    if (!Number.isInteger(buyX) || buyX < 1 || !Number.isInteger(getY) || getY < 1) {
+      setCalculatorMessage("Buy and Get Free must be whole numbers of at least 1.");
+      return;
+    }
+    quantity = buyX + getY;
+    regularTotal = price * quantity;
+    payTotal = price * buyX;
+  } else if (calculatorState.type === "nth-item") {
+    const nth = parseInputNumber(calculatorState.nth);
+    const percentage = parseInputNumber(calculatorState.nthPercentage);
+    if (!Number.isInteger(nth) || nth < 2) {
+      setCalculatorMessage("Nth Item must be a whole number of at least 2.");
+      return;
+    }
+    if (!(percentage > 0) || percentage > 100) {
+      setCalculatorMessage("Enter a discount between 0 and 100%.");
+      return;
+    }
+    quantity = nth;
+    regularTotal = price * quantity;
+    payTotal = price * (quantity - 1) + price * (1 - percentage / 100);
+  } else {
+    const discount = parseInputNumber(calculatorState.fixedDiscount);
+    const hasMinimumSpend = String(calculatorState.minimumSpend).trim() !== "";
+    const minimumSpend = hasMinimumSpend ? parseInputNumber(calculatorState.minimumSpend) : null;
+
+    if (!(discount > 0)) {
+      setCalculatorMessage("Enter a fixed discount greater than 0.");
+      return;
+    }
+    if (hasMinimumSpend && !(minimumSpend > 0)) {
+      setCalculatorMessage("Minimum Spend must be greater than 0, or left blank.");
+      return;
+    }
+
+    if (hasMinimumSpend) {
+      quantity = Math.max(1, Math.ceil((minimumSpend / price) - 1e-12));
+    }
+    regularTotal = price * quantity;
+    payTotal = Math.max(0, regularTotal - discount);
+  }
+
+  const effectivePrice = payTotal / quantity;
+  const totalSavings = Math.max(0, regularTotal - payTotal);
+  const differencePerItem = Math.max(0, price - effectivePrice);
+  const itemText = quantity === 1 ? "" : ` for ${quantity} items`;
+
+  effectivePriceValueEl.textContent = formatMoney(effectivePrice, currency);
+  calculatorTotalEl.textContent = `${formatMoney(payTotal, currency)}${itemText}`;
+  calculatorSavingsEl.textContent = `${formatMoney(differencePerItem, currency)} less / item · Save ${formatMoney(totalSavings, currency)}`;
+
+  calculatorEmptyEl.classList.add("hidden");
+  calculatorResultContentEl.classList.remove("hidden");
+}
+
+function resetCalculator() {
+  calculatorState.originalPrice = "";
+  calculatorState.currency = "EUR";
+  calculatorState.type = "percentage";
+  calculatorState.percentage = "";
+  calculatorState.buyX = "1";
+  calculatorState.getY = "1";
+  calculatorState.nth = "2";
+  calculatorState.nthPercentage = "50";
+  calculatorState.fixedDiscount = "";
+  calculatorState.minimumSpend = "";
+
+  calculatorOriginalPriceEl.value = "";
+  calculatorCurrencyEl.value = "EUR";
+  discountTypeEl.value = "percentage";
+  renderCalculatorFields();
+  renderCalculatorResult();
+
+  setTimeout(() => calculatorOriginalPriceEl.focus(), 50);
 }
 
 function renderProducts() {
@@ -908,6 +1334,33 @@ async function refreshRates() {
   }
 }
 
+compareModeBtn.addEventListener("click", () => setToolMode("compare"));
+calculatorModeBtn.addEventListener("click", () => setToolMode("calculator"));
+
+calculatorOriginalPriceEl.addEventListener("input", () => {
+  calculatorState.originalPrice = calculatorOriginalPriceEl.value;
+  renderCalculatorResult();
+});
+
+calculatorCurrencyEl.addEventListener("change", () => {
+  calculatorState.currency = calculatorCurrencyEl.value;
+  renderCalculatorFields();
+  renderCalculatorResult();
+});
+
+discountTypeEl.addEventListener("change", () => {
+  calculatorState.type = discountTypeEl.value;
+  renderCalculatorFields();
+  renderCalculatorResult();
+});
+
+calculatorFieldsEl.addEventListener("input", event => {
+  const field = event.target.dataset.calculatorField;
+  if (!field || !(field in calculatorState)) return;
+  calculatorState[field] = event.target.value;
+  renderCalculatorResult();
+});
+
 productsEl.addEventListener("input", event => {
   const productEl = event.target.closest(".product");
   const field = event.target.dataset.field;
@@ -978,6 +1431,11 @@ reloadLastEl.addEventListener("click", () => {
 });
 
 resetCurrentEl.addEventListener("click", () => {
+  if (currentToolMode === "calculator") {
+    resetCalculator();
+    return;
+  }
+
   // Hard reset: restore the original blank A/B comparison.
   // Keep FX_CACHE_KEY untouched so cached exchange rates remain available.
   try {
@@ -1003,6 +1461,12 @@ function init() {
   loadState();
   loadLastCompare();
   outputCurrencyEl.innerHTML = currencyOptions(outputCurrency);
+  calculatorCurrencyEl.innerHTML = currencyOptions(calculatorState.currency);
+  calculatorCurrencyEl.value = calculatorState.currency;
+  discountTypeEl.value = calculatorState.type;
+  renderCalculatorFields();
+  renderCalculatorResult();
+  setToolMode("compare");
   renderProducts();
   updateReloadButton();
 
