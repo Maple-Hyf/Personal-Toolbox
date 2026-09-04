@@ -591,8 +591,9 @@ input:focus,select:focus{border-color:var(--border-strong)}
         <label for="discountType">Discount Type</label>
         <select id="discountType">
           <option value="percentage">Percentage Off</option>
-          <option value="buy-get">Buy X Get Y Free</option>
+          <option value="quantity">Quantity Discount</option>
           <option value="nth-item">Nth Item Discount</option>
+          <option value="buy-get">Buy X Get Y Free</option>
           <option value="fixed">Fixed Discount</option>
         </select>
       </div>
@@ -740,6 +741,8 @@ const calculatorState = {
   currency: "EUR",
   type: "percentage",
   percentage: "",
+  quantityMinimum: "3",
+  quantityPercentage: "20",
   buyX: "1",
   getY: "1",
   nth: "2",
@@ -908,10 +911,12 @@ function cleanCalculatorSnapshot(snapshot) {
   const cleaned = {
     originalPrice: String(snapshot.originalPrice ?? ""),
     currency: CURRENCY_CODES.includes(snapshot.currency) ? snapshot.currency : "EUR",
-    type: ["percentage", "buy-get", "nth-item", "fixed"].includes(snapshot.type)
+    type: ["percentage", "quantity", "nth-item", "buy-get", "fixed"].includes(snapshot.type)
       ? snapshot.type
       : "percentage",
     percentage: String(snapshot.percentage ?? ""),
+    quantityMinimum: String(snapshot.quantityMinimum ?? "3"),
+    quantityPercentage: String(snapshot.quantityPercentage ?? "20"),
     buyX: String(snapshot.buyX ?? "1"),
     getY: String(snapshot.getY ?? "1"),
     nth: String(snapshot.nth ?? "2"),
@@ -925,6 +930,11 @@ function cleanCalculatorSnapshot(snapshot) {
 
   if (cleaned.type === "percentage") {
     const percentage = parseInputNumber(cleaned.percentage);
+    if (!(percentage > 0) || percentage > 100) return null;
+  } else if (cleaned.type === "quantity") {
+    const minimum = parseInputNumber(cleaned.quantityMinimum);
+    const percentage = parseInputNumber(cleaned.quantityPercentage);
+    if (!Number.isInteger(minimum) || minimum < 2) return null;
     if (!(percentage > 0) || percentage > 100) return null;
   } else if (cleaned.type === "buy-get") {
     const buyX = parseInputNumber(cleaned.buyX);
@@ -1068,6 +1078,30 @@ function renderCalculatorFields() {
     return;
   }
 
+  if (calculatorState.type === "quantity") {
+    calculatorFieldsEl.innerHTML = `
+      <div class="calculator-two-fields">
+        <div class="field">
+          <label for="quantityMinimum">Buy at least</label>
+          <div class="percent-control">
+            <input id="quantityMinimum" type="text" inputmode="numeric" autocomplete="off"
+              value="${escapeHtml(calculatorState.quantityMinimum)}" data-calculator-field="quantityMinimum" />
+            <span class="control-affix">items</span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="quantityPercentage">Discount</label>
+          <div class="percent-control">
+            <input id="quantityPercentage" type="text" inputmode="decimal" autocomplete="off"
+              value="${escapeHtml(calculatorState.quantityPercentage)}" data-calculator-field="quantityPercentage" />
+            <span class="control-affix">% off</span>
+          </div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
   if (calculatorState.type === "buy-get") {
     calculatorFieldsEl.innerHTML = `
       <div class="calculator-two-fields">
@@ -1155,6 +1189,20 @@ function renderCalculatorResult() {
       return;
     }
     payTotal = price * (1 - percentage / 100);
+  } else if (calculatorState.type === "quantity") {
+    const minimum = parseInputNumber(calculatorState.quantityMinimum);
+    const percentage = parseInputNumber(calculatorState.quantityPercentage);
+    if (!Number.isInteger(minimum) || minimum < 2) {
+      setCalculatorMessage("Buy at least must be a whole number of at least 2.");
+      return;
+    }
+    if (!(percentage > 0) || percentage > 100) {
+      setCalculatorMessage("Enter a discount between 0 and 100%.");
+      return;
+    }
+    quantity = minimum;
+    regularTotal = price * quantity;
+    payTotal = regularTotal * (1 - percentage / 100);
   } else if (calculatorState.type === "buy-get") {
     const buyX = parseInputNumber(calculatorState.buyX);
     const getY = parseInputNumber(calculatorState.getY);
@@ -1218,6 +1266,8 @@ function resetCalculator() {
   calculatorState.currency = "EUR";
   calculatorState.type = "percentage";
   calculatorState.percentage = "";
+  calculatorState.quantityMinimum = "3";
+  calculatorState.quantityPercentage = "20";
   calculatorState.buyX = "1";
   calculatorState.getY = "1";
   calculatorState.nth = "2";
